@@ -1,0 +1,512 @@
+---
+title: "Data Report"
+output: html_document
+---
+
+
+# **1. Business Understanding**
+## 1.1 Business Overview
+
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. This data will be useful in observing what type of individuals view the ads. 
+
+## 1.2 Business Objective
+
+As a data scientist, I will be helping her identify which individuals are most likely to click on her ads with the help of the collected data. 
+
+## 1.3 Business Success Criteria
+
+The success criteria of this report will be:
+
+* successfully identifying the characteristics of individuals who click on ads in order to determine the likelihood of someone clicking on her ad.
+
+## 1.4 Business context
+
+The data is collected from the entrepreneur's blog and has a focus on cryptography courses.
+
+## 1.5 Experimental design used 
+
+I'll be doing univariate and bivariate analysis to meet the business objective.
+
+# **2. Data Understanding**
+## 2.1 Data Description
+
+There is one dataset available for this project - the advertising dataset. It is quite big, with 10 columns and 1000 rows.
+The columns available are as follows:
+
+* Daily.Time.Spent.on.Site - This shows the time in minutes an individual spent on the site
+* Age - This shows the age of the individual using the site
+* Area.Income - This shows the income of the area the individual is in
+* Daily.Internet.Usage - This shows how much internet an individual uses while on the site
+* Ad.Topic.Line - This shows the topic that was on the ad viewed
+* City - This shows the city the individual is in
+* Male - This shows the gender of the individual. It could be either male or female
+* Country - This shows the country the individual is in
+* Timestamp - This shows the time the individual clicked on the ad
+* Clicked.On.Ad - This shows whether the individual clicked on the ad or not
+
+## 2.2 Data relevance
+
+The data provided is relevant to this question and can sufficiently aid in meeting the business objective.
+
+# **3. Data Preparation**
+## 3.1 Loading the dataset
+
+The dataset was uploaded in CSV format and a dataframe created from it.
+
+```{r}
+advert <- read.csv('http://bit.ly/IPAdvertisingData')
+
+```
+
+
+## 3.2 Previewing the dataset
+
+After creating the dataframe, I previewed the first 6 entries.
+
+```{r}
+head(advert)
+```
+
+## 3.3 Data Exploration
+
+Here, I am trying to better understand my dataset. There are a few steps to this.
+
+* First, I checked for the dimensions of the dataset. It has 1000 rows and 10 columns.
+
+```{r}
+dim(advert)
+```
+
+* Then I checked for the structure of the R object. It is a dataframe with 1000 observations and 10 columns.
+
+```{r}
+str(advert)
+```
+
+* Then I checked the descriptive statistics of the dataframe. This gives the mean, minimum, maximum and quartiles of the variable.
+
+```{r}
+summary(advert)
+```
+ 
+* Then I checked for the datatypes of all the variables in the dataset.
+  + Age, Male and Clicked.On.Ad variables are integers.
+  + Daily.Time.Spent.on.Site, Area.Income, Daily.Internet.Usage are numeric variables.
+  + Ad.Topic.Line, City, Country and Timestamp are character variables.
+
+```{r}
+sapply(advert, class)
+```
+
+* Then I counted the unique values in each of the variables. From this we can see that 2 variables, Male and Clicked.On.Ad have discrete data.
+
+```{r}
+length(unique(advert$Daily.Time.Spent.on.Site))
+length(unique(advert$Age))
+length(unique(advert$Area.Income))
+length(unique(advert$Daily.Internet.Usage))
+length(unique(advert$Ad.Topic.Line))
+length(unique(advert$City))
+length(unique(advert$Male))
+length(unique(advert$Country))
+length(unique(advert$Timestamp))
+length(unique(advert$Clicked.on.Ad ))
+```
+
+
+## 3.4 Data Cleaning
+
+* I begun by checking for missing values. There were none.
+
+```{r}
+length(which(is.na(advert)))
+```
+
+* I then checked for duplicated values. There were none.
+
+```{r}
+duplicated_rows <- advert[duplicated(advert),]
+duplicated_rows
+```
+
+* I then checked for outliers in 4 variables. Age, Daily.Time.Spent.on.Site, Area.Income and Daily.Internet.Usage. The other variables are either discrete or character variables.
+
+```{r}
+boxplot(advert$Daily.Time.Spent.on.Site, 
+        data = advert,
+        main="Boxplot for Daily Time Spent on Site",
+        ylab="Time in minutes",
+        col="orange",
+        border="brown"
+)
+
+boxplot(advert$Age, 
+        data = advert,
+        main="Boxplot for Age",
+        col="red",
+        border="black"
+)
+
+boxplot(advert$Area.Income, 
+        data = advert,
+        main="Boxpot for Area Income",
+        col="purple",
+        border="black"
+)
+
+boxplot(advert$Daily.Internet.Usage, 
+        data = advert,
+        main="Boxplot for Daily Internet Usage",
+        col="pink",
+        border="brown"
+)
+```
+
+From the 4 boxplots, one has outliers - the Area Income variable. It is quite common to have incomes that are higher/lower than the average, so I didn't remove those outliers.
+
+# 4. Analysis
+## 4.1 Univariate Analysis: Numerical Variables
+### Measures of Central Tendency
+
+* Mean - This shows the average of the variables
+
+```{r}
+dailytimespent.mean <- mean(advert$Daily.Time.Spent.on.Site)
+dailytimespent.mean
+
+age.mean <- mean(advert$Age)
+age.mean
+
+areaincome.mean <- mean(advert$Area.Income)
+areaincome.mean
+
+Daily.Internet.Usage.mean <- mean(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.mean
+```
+
+* Median - This gives the number that is in the middle in a sorted list.
+
+```{r}
+dailytimespent.median <- median(advert$Daily.Time.Spent.on.Site)
+dailytimespent.median
+
+age.median <- median(advert$Age)
+age.median
+
+areaincome.median <- median(advert$Area.Income)
+areaincome.median
+
+Daily.Internet.Usage.median <- median(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.median
+```
+
+* Mode - This gives the most repeated entry in a variable
+
+```{r}
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+# Calculate mode using getmode() function
+dailytimespent.mode <- getmode(advert$Daily.Time.Spent.on.Site)
+dailytimespent.mode
+
+
+age.mode <- getmode(advert$Age)
+age.mode
+
+
+areaincome.mode <- getmode(advert$Area.Income)
+areaincome.mode
+
+
+Daily.Internet.Usage.mode <- getmode(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.mode
+```
+
+### Measures of Dispersion
+
+* Minimun - This gives the smallest value of the variable
+
+```{r}
+dailytimespent.min <- min(advert$Daily.Time.Spent.on.Site)
+dailytimespent.min
+
+
+age.min <- min(advert$Age)
+age.min
+
+
+areaincome.min <- min(advert$Area.Income)
+areaincome.min
+
+
+Daily.Internet.Usage.min <- min(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.min
+```
+
+* Maximum - This gives the largest value of the variable
+
+```{r}
+dailytimespent.max <- max(advert$Daily.Time.Spent.on.Site)
+dailytimespent.max
+
+
+age.max <- max(advert$Age)
+age.max
+
+
+areaincome.max <- max(advert$Area.Income)
+areaincome.max
+
+
+Daily.Internet.Usage.max <- max(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.max
+```
+
+* Range - This returns the interval between the highest and the lowest value.
+
+```{r}
+dailytimespent.range <- range(advert$Daily.Time.Spent.on.Site)
+dailytimespent.range
+
+
+age.range <- range(advert$Age)
+age.range
+
+
+areaincome.range <- range(advert$Area.Income)
+areaincome.range
+
+
+Daily.Internet.Usage.range <- range(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.range
+```
+
+* Quantile - This gives the first and the third quartile together with the range and the median (2nd quantile)
+
+```{r}
+dailytimespent.quantile <- quantile(advert$Daily.Time.Spent.on.Site)
+dailytimespent.quantile
+
+
+age.quantile <- quantile(advert$Age)
+age.quantile
+
+
+areaincome.quantile <- quantile(advert$Area.Income)
+areaincome.quantile
+
+
+Daily.Internet.Usage.quantile <- quantile(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.quantile
+```
+
+* Variance - This gives the measure of how far a set of numbers are spread out from their average value
+
+```{r}
+dailytimespent.variance <- var(advert$Daily.Time.Spent.on.Site)
+dailytimespent.variance
+
+
+age.variance <- var(advert$Age)
+age.variance
+
+
+areaincome.variance <- var(advert$Area.Income)
+areaincome.variance
+
+
+Daily.Internet.Usage.variance <- var(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.variance
+```
+
+
+* Standard Deviation - This is the square root of the variance
+
+```{r}
+dailytimespent.sd <- sd(advert$Daily.Time.Spent.on.Site)
+dailytimespent.sd
+
+
+age.sd <- sd(advert$Age)
+age.sd
+
+
+areaincome.sd <- sd(advert$Area.Income)
+areaincome.sd
+
+
+Daily.Internet.Usage.sd <- sd(advert$Daily.Internet.Usage)
+Daily.Internet.Usage.sd
+```
+
+
+### Visualizations
+
+* Histograms - displays the shape and spread of continuous sample data
+
+```{r}
+DailyTimeSpent <- advert$Daily.Time.Spent.on.Site
+hist(DailyTimeSpent)
+
+Age <- advert$Age
+hist(Age)
+
+
+AreaIncome <- advert$Area.Income
+hist(AreaIncome)
+
+
+DailyInternetUsage <- advert$Daily.Internet.Usage
+hist(DailyInternetUsage)
+```
+
+**Observations**
+
+* The daily time spent variable is right skewed
+* The age variable is left skewed
+* The area income variable is right skewed
+* The daily internet usage variable is bimodal
+
+
+## 4.2 Univariate Analysis:Categorical variables
+### Bar Charts for the 2 discrete variables
+
+* Male variable
+
+```{r}
+gender <- advert$Male
+
+gender_frequency <- table(gender)
+
+barplot(gender_frequency, col="blue",
+        main="Gender Chart",border="red")
+```
+
+* Clicked on Ad variable
+
+```{r}
+clicked <- advert$Clicked.on.Ad
+
+clicked_frequency <- table(clicked)
+
+barplot(clicked_frequency, col="black",
+        main="Clicked on Ad Chart",border="red")
+```
+
+**Observations**
+
+* The females are more than males in the dataset
+* Those who clicked on the ad and those who didn't are the same number. The dataset is balanced.
+
+
+## 4.3 Bivariate Analysis: Categorical and Categorical
+
+* Barplots - These show the relationship between the variables
+
+```{r}
+counts <- table(advert$Clicked.on.Ad, advert$Male)
+barplot(counts, main="Click Distribution by Gender",
+        xlab="Gender", col=c("darkblue","red"),
+        legend = rownames(counts), beside=TRUE)
+
+counts <- table(advert$Clicked.on.Ad, advert$Country)
+barplot(counts, main="Click Distribution by Country",
+        xlab="Country", col=c("darkblue","red"),
+        legend = rownames(counts), beside=TRUE)
+```
+
+**Observations**
+
+* More males clicked on the ad than females
+* 3 countries have the highest number of individuals who clicked on the ad.
+
+## 4.4 Bivariate Analysis: Numerical and Numerical
+
+In order to check for correlation, I first changed the categorical variables to numerical by encoding.
+
+```{r}
+encode_ordinal <- function(x, order = unique(x)) {
+  x <- as.numeric(factor(x, levels = order))
+  x
+}
+
+
+table(advert[["Ad.Topic.Line"]], encode_ordinal(advert[["Ad.Topic.Line"]]), useNA = "ifany")
+
+table(advert[["City"]], encode_ordinal(advert[["City"]]), useNA = "ifany")
+
+table(advert[["Country"]], encode_ordinal(advert[["Country"]]), useNA = "ifany")
+
+table(advert[["Timestamp"]], encode_ordinal(advert[["Timestamp"]]), useNA = "ifany")
+
+new_advert <- advert
+new_advert[["Ad.Topic.Line_encoded"]] <- encode_ordinal(advert[["Ad.Topic.Line"]])
+new_advert[["City_encoded"]] <- encode_ordinal(advert[["City"]])
+new_advert[["Country_encoded"]] <- encode_ordinal(advert[["Country"]])
+new_advert[["Timestamp_encoded"]] <- encode_ordinal(advert[["Timestamp"]])
+head(new_advert)
+```
+
+This created 4 new encoded columns. Therefore, I dropped the 4 categorical columns.
+
+```{r}
+new_advert1 = subset(new_advert, select = -c(Ad.Topic.Line, City, Country, Timestamp) )
+head(new_advert1)
+```
+
+Then I confirmed that the datatypes of all the variables were now numerical/integer.
+
+```{r}
+sapply(new_advert1, class)
+```
+
+* Scatter plot - this shows how much the variables affect each other
+
+```{r}
+attach(new_advert1)
+plot(new_advert1[,0:10])
+```
+
+**Observations**
+
+* Some variables show positive correlation with each other i.e
+  + City, Ad.Topic.Line
+  + Timestamp, Ad.Topic.Line
+  + City, Timestamp
+  
+* Most of the variables show no correlation with each other.
+
+
+
+* Correlation matrix - this shows the correlation of the different variables
+
+```{r}
+# First install the corrplot package
+
+install.packages("corrplot")
+library(corrplot)
+
+# Run the corrplot function
+
+new_advert1.cor = cor(new_advert1, method = c("spearman"))
+corrplot(new_advert1.cor)
+```
+**Observations**
+
+* The variables that have the highest relation to the variable Clicked.On.Ad are:
+  + Age
+  
+* The variables with the lowest correlation to the Clicked.On.Ad are:
+  + Daily Time Spent on site
+  + Area Income
+  + Daily Internet Usage
+
+# 5. Evaluation
+From the analysis, we see that the age of the individuals is likely to influence who clicks on the ad. Therefore she should focus more on individuals of a certain age.
+
+# 6. Deployment
+
+From the analysis that has been done and the recommendation made, the entrepreneur can begin implementation. 
+
